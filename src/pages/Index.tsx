@@ -7,8 +7,9 @@ import LoginScreen from "@/components/LoginScreen";
 import Dashboard from "@/components/Dashboard";
 import PacienteForm from "@/components/PacienteForm";
 import PacienteTable from "@/components/PacienteTable";
+import DisparoWhatsApp from "@/components/DisparoWhatsApp";
 
-type Secao = "dashboard" | "novo-paciente" | "agendados" | "sem-interesse" | "fechados" | "todos";
+type Secao = "dashboard" | "novo-paciente" | "agendados" | "sem-interesse" | "fechados" | "todos" | "disparo";
 
 const NAV_ITEMS: { id: Secao; label: string; icon: string }[] = [
   { id: "dashboard", label: "Painel", icon: "📊" },
@@ -17,6 +18,7 @@ const NAV_ITEMS: { id: Secao; label: string; icon: string }[] = [
   { id: "sem-interesse", label: "Sem Interesse", icon: "❌" },
   { id: "fechados", label: "Fechados", icon: "✅" },
   { id: "todos", label: "Todos", icon: "📋" },
+  { id: "disparo", label: "Disparo", icon: "📨" },
 ];
 
 const Index = () => {
@@ -187,6 +189,10 @@ const Index = () => {
               onDelete={deletePaciente}
             />
           </div>
+        )}
+
+        {secao === "disparo" && (
+          <DisparoWhatsApp pacientes={pacientes} />
         )}
 
         {secao === "todos" && (
