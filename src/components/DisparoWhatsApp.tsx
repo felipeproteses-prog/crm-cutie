@@ -162,7 +162,7 @@ const DisparoWhatsApp = ({ pacientes }: DisparoWhatsAppProps) => {
                   }`}
                   onClick={() => toggleSelecionado(p.id)}
                 >
-                  <td className="p-3">
+                  <td className="p-3" onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={selecionados.includes(p.id)}
                       onCheckedChange={() => toggleSelecionado(p.id)}
