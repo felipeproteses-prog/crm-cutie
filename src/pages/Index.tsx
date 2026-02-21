@@ -8,8 +8,10 @@ import Dashboard from "@/components/Dashboard";
 import PacienteForm from "@/components/PacienteForm";
 import PacienteTable from "@/components/PacienteTable";
 import DisparoWhatsApp from "@/components/DisparoWhatsApp";
+import PagamentoDialog from "@/components/PagamentoDialog";
+import ReagendarDialog from "@/components/ReagendarDialog";
 
-type Secao = "dashboard" | "novo-paciente" | "agendados" | "sem-interesse" | "fechados" | "todos" | "disparo";
+type Secao = "dashboard" | "novo-paciente" | "agendados" | "sem-interesse" | "fechados" | "todos" | "disparo" | "financeiro";
 
 const NAV_ITEMS: { id: Secao; label: string; icon: string }[] = [
   { id: "dashboard", label: "Painel", icon: "📊" },
@@ -17,6 +19,7 @@ const NAV_ITEMS: { id: Secao; label: string; icon: string }[] = [
   { id: "agendados", label: "Agendados", icon: "📅" },
   { id: "sem-interesse", label: "Sem Interesse", icon: "❌" },
   { id: "fechados", label: "Fechados", icon: "✅" },
+  { id: "financeiro", label: "Financeiro", icon: "💰" },
   { id: "todos", label: "Todos", icon: "📋" },
   { id: "disparo", label: "Disparo", icon: "📨" },
 ];
@@ -30,6 +33,10 @@ const Index = () => {
   const [ano, setAno] = useState(new Date().getFullYear());
   const [filtroNome, setFiltroNome] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("");
+
+  // Dialog states
+  const [pagamentoPaciente, setPagamentoPaciente] = useState<any>(null);
+  const [reagendarPaciente, setReagendarPaciente] = useState<any>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -64,9 +71,9 @@ const Index = () => {
   };
 
   const exportCSV = () => {
-    let csv = "Nome,Telefone,Data Contato,Data Agendamento,Horário,Status,Valor,Mídia,Procedimento,Observações\n";
+    let csv = "Nome,Telefone,Data Contato,Data Agendamento,Horário,Status,Valor,Mídia,Procedimento,Tipo Atendimento,Observações\n";
     pacientes.forEach((p) => {
-      csv += `"${p.nome}","${p.telefone}","${p.data_contato || ""}","${p.data_agendamento || ""}","${p.horario_agendamento || ""}","${p.status}","${p.valor}","${p.midia || ""}","${p.procedimentos || ""}","${p.observacoes || ""}"\n`;
+      csv += `"${p.nome}","${p.telefone}","${p.data_contato || ""}","${p.data_agendamento || ""}","${p.horario_agendamento || ""}","${p.status}","${p.valor}","${p.midia || ""}","${p.procedimentos || ""}","${p.tipo_atendimento || ""}","${p.observacoes || ""}"\n`;
     });
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
@@ -90,7 +97,7 @@ const Index = () => {
 
   if (!user) return <LoginScreen onLogin={fetchPacientes} />;
 
-  const agendados = pacientes.filter((p) => p.status === "Agendado");
+  const agendados = pacientes.filter((p) => ["Agendado", "Remarcado"].includes(p.status));
   const semInteresse = pacientes.filter((p) => p.status === "Sem Interesse");
   const fechados = pacientes.filter((p) => p.status === "Fechado");
 
@@ -150,10 +157,14 @@ const Index = () => {
                 { key: "telefone", label: "Telefone" },
                 { key: "data_agendamento", label: "Data" },
                 { key: "horario_agendamento", label: "Horário" },
+                { key: "tipo_atendimento", label: "Tipo" },
                 { key: "procedimentos", label: "Procedimento" },
+                { key: "status", label: "Status" },
               ]}
               onDelete={deletePaciente}
               showWhatsApp
+              onReagendar={(p) => setReagendarPaciente(p)}
+              onDarBaixa={(p) => setPagamentoPaciente(p)}
             />
           </div>
         )}
@@ -187,6 +198,25 @@ const Index = () => {
                 { key: "data_agendamento", label: "Data" },
               ]}
               onDelete={deletePaciente}
+              onDarBaixa={(p) => setPagamentoPaciente(p)}
+            />
+          </div>
+        )}
+
+        {secao === "financeiro" && (
+          <div className="animate-fade-in">
+            <h2 className="mb-4 font-display text-2xl font-bold">💰 Módulo Financeiro</h2>
+            <PacienteTable
+              pacientes={pacientes.filter((p) => p.valor > 0)}
+              columns={[
+                { key: "nome", label: "Nome" },
+                { key: "procedimentos", label: "Procedimento" },
+                { key: "valor", label: "Valor", render: (p) => `R$ ${Number(p.valor).toFixed(2).replace(".", ",")}` },
+                { key: "status", label: "Status" },
+                { key: "data_agendamento", label: "Data" },
+              ]}
+              onDelete={deletePaciente}
+              onDarBaixa={(p) => setPagamentoPaciente(p)}
             />
           </div>
         )}
@@ -208,6 +238,10 @@ const Index = () => {
                 <select className="w-full rounded-lg border border-primary/30 bg-secondary p-2.5 text-foreground" value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)}>
                   <option value="">Todos</option>
                   <option value="Agendado">Agendado</option>
+                  <option value="Compareceu">Compareceu</option>
+                  <option value="Faltou">Faltou</option>
+                  <option value="Remarcado">Remarcado</option>
+                  <option value="Finalizado">Finalizado</option>
                   <option value="Sem Interesse">Sem Interesse</option>
                   <option value="Fechado">Fechado</option>
                 </select>
@@ -224,15 +258,34 @@ const Index = () => {
                 { key: "nome", label: "Nome" },
                 { key: "telefone", label: "Telefone" },
                 { key: "status", label: "Status" },
+                { key: "tipo_atendimento", label: "Tipo" },
                 { key: "data_agendamento", label: "Data Agend." },
                 { key: "procedimentos", label: "Procedimento" },
                 { key: "valor", label: "Valor", render: (p) => `R$ ${Number(p.valor).toFixed(2).replace(".", ",")}` },
               ]}
               onDelete={deletePaciente}
+              onReagendar={(p) => setReagendarPaciente(p)}
+              onDarBaixa={(p) => setPagamentoPaciente(p)}
             />
           </div>
         )}
       </main>
+
+      {/* Dialogs */}
+      <PagamentoDialog
+        open={!!pagamentoPaciente}
+        onClose={() => setPagamentoPaciente(null)}
+        paciente={pagamentoPaciente}
+        userId={user.id}
+        onSaved={fetchPacientes}
+      />
+      <ReagendarDialog
+        open={!!reagendarPaciente}
+        onClose={() => setReagendarPaciente(null)}
+        paciente={reagendarPaciente}
+        userId={user.id}
+        onSaved={fetchPacientes}
+      />
     </div>
   );
 };

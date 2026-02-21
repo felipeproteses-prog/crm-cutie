@@ -1,12 +1,12 @@
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 
 interface PacienteTableProps {
   pacientes: any[];
   columns: { key: string; label: string; render?: (p: any) => string }[];
   onDelete: (id: string) => void;
   showWhatsApp?: boolean;
+  onReagendar?: (p: any) => void;
+  onDarBaixa?: (p: any) => void;
 }
 
 const sendWhatsApp = (p: any) => {
@@ -16,7 +16,7 @@ const sendWhatsApp = (p: any) => {
   window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, "_blank");
 };
 
-const PacienteTable = ({ pacientes, columns, onDelete, showWhatsApp }: PacienteTableProps) => {
+const PacienteTable = ({ pacientes, columns, onDelete, showWhatsApp, onReagendar, onDarBaixa }: PacienteTableProps) => {
   if (pacientes.length === 0) {
     return <p className="mt-4 text-center text-muted-foreground">Nenhum paciente encontrado.</p>;
   }
@@ -42,10 +42,20 @@ const PacienteTable = ({ pacientes, columns, onDelete, showWhatsApp }: PacienteT
                   {c.render ? c.render(p) : p[c.key] ?? "-"}
                 </td>
               ))}
-              <td className="flex gap-2 p-3">
+              <td className="flex flex-wrap gap-1.5 p-3">
                 {showWhatsApp && (
                   <Button size="sm" onClick={() => sendWhatsApp(p)} className="bg-[hsl(142,70%,49%)] text-[hsl(0,0%,100%)] hover:bg-[hsl(142,70%,40%)] text-xs font-bold">
                     WhatsApp
+                  </Button>
+                )}
+                {onReagendar && (
+                  <Button size="sm" variant="outline" onClick={() => onReagendar(p)} className="text-xs font-bold">
+                    🔁 Reagendar
+                  </Button>
+                )}
+                {onDarBaixa && (
+                  <Button size="sm" variant="secondary" onClick={() => onDarBaixa(p)} className="text-xs font-bold">
+                    💰 Dar Baixa
                   </Button>
                 )}
                 <Button size="sm" variant="destructive" onClick={() => onDelete(p.id)} className="text-xs font-bold">
