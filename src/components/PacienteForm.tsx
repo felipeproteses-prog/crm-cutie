@@ -15,6 +15,7 @@ const PacienteForm = ({ userId, onSaved }: PacienteFormProps) => {
     nome: "", telefone: "", data_contato: "", data_agendamento: "",
     horario_agendamento: "", status: "Agendado", valor: "0",
     midia: "", procedimentos: "", observacoes: "",
+    tipo_atendimento: "Avaliação", lembrete_ativo: false,
   });
   const [loading, setLoading] = useState(false);
 
@@ -38,13 +39,15 @@ const PacienteForm = ({ userId, onSaved }: PacienteFormProps) => {
       midia: form.midia || null,
       procedimentos: form.procedimentos || null,
       observacoes: form.observacoes || null,
+      tipo_atendimento: form.tipo_atendimento || "Avaliação",
+      lembrete_ativo: form.lembrete_ativo,
     });
     setLoading(false);
     if (error) {
       toast.error("Erro ao salvar paciente.");
     } else {
       toast.success("Paciente salvo com sucesso!");
-      setForm({ nome: "", telefone: "", data_contato: "", data_agendamento: "", horario_agendamento: "", status: "Agendado", valor: "0", midia: "", procedimentos: "", observacoes: "" });
+      setForm({ nome: "", telefone: "", data_contato: "", data_agendamento: "", horario_agendamento: "", status: "Agendado", valor: "0", midia: "", procedimentos: "", observacoes: "", tipo_atendimento: "Avaliação", lembrete_ativo: false });
       onSaved();
     }
   };
@@ -64,6 +67,10 @@ const PacienteForm = ({ userId, onSaved }: PacienteFormProps) => {
           <Label>Status *</Label>
           <select className={selectClass + " mt-1"} value={form.status} onChange={(e) => set("status", e.target.value)}>
             <option value="Agendado">Agendado</option>
+            <option value="Compareceu">Compareceu</option>
+            <option value="Faltou">Faltou</option>
+            <option value="Remarcado">Remarcado</option>
+            <option value="Finalizado">Finalizado</option>
             <option value="Sem Interesse">Sem Interesse</option>
             <option value="Fechado">Fechado</option>
           </select>
@@ -79,6 +86,16 @@ const PacienteForm = ({ userId, onSaved }: PacienteFormProps) => {
             <option value="Indicação">Indicação</option>
             <option value="Telefone">Telefone</option>
             <option value="Guilherme">Guilherme</option>
+          </select>
+        </div>
+        <div>
+          <Label>Tipo de Atendimento</Label>
+          <select className={selectClass + " mt-1"} value={form.tipo_atendimento} onChange={(e) => set("tipo_atendimento", e.target.value)}>
+            <option value="Avaliação">Avaliação</option>
+            <option value="Prova da prótese">Prova da prótese</option>
+            <option value="Entrega da prótese">Entrega da prótese</option>
+            <option value="Ajuste pós-entrega">Ajuste pós-entrega</option>
+            <option value="Retorno comum">Retorno comum</option>
           </select>
         </div>
         <div className="sm:col-span-2">
@@ -98,6 +115,16 @@ const PacienteForm = ({ userId, onSaved }: PacienteFormProps) => {
         <div className="sm:col-span-2">
           <Label>Observações</Label>
           <textarea className={selectClass + " mt-1 min-h-[80px]"} value={form.observacoes} onChange={(e) => set("observacoes", e.target.value)} />
+        </div>
+        <div className="flex items-center gap-2 sm:col-span-2">
+          <input
+            type="checkbox"
+            id="lembrete"
+            checked={form.lembrete_ativo}
+            onChange={(e) => setForm((f) => ({ ...f, lembrete_ativo: e.target.checked }))}
+            className="h-4 w-4 rounded border-primary accent-accent"
+          />
+          <Label htmlFor="lembrete">✔ Ativar lembrete automático (WhatsApp)</Label>
         </div>
       </div>
       <Button onClick={handleSubmit} disabled={loading} className="mt-5 bg-accent text-accent-foreground hover:bg-accent/80 font-bold">

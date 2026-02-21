@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      historico_reagendamentos: {
+        Row: {
+          created_at: string
+          data_anterior: string | null
+          data_nova: string | null
+          horario_anterior: string | null
+          horario_novo: string | null
+          id: string
+          motivo: string | null
+          paciente_id: string
+          status_anterior: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_anterior?: string | null
+          data_nova?: string | null
+          horario_anterior?: string | null
+          horario_novo?: string | null
+          id?: string
+          motivo?: string | null
+          paciente_id: string
+          status_anterior?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data_anterior?: string | null
+          data_nova?: string | null
+          horario_anterior?: string | null
+          horario_novo?: string | null
+          id?: string
+          motivo?: string | null
+          paciente_id?: string
+          status_anterior?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_reagendamentos_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pacientes: {
         Row: {
           created_at: string
@@ -21,12 +68,14 @@ export type Database = {
           data_contato: string | null
           horario_agendamento: string | null
           id: string
+          lembrete_ativo: boolean | null
           midia: string | null
           nome: string
           observacoes: string | null
           procedimentos: string | null
           status: string
           telefone: string
+          tipo_atendimento: string | null
           updated_at: string
           user_id: string
           valor: number
@@ -37,12 +86,14 @@ export type Database = {
           data_contato?: string | null
           horario_agendamento?: string | null
           id?: string
+          lembrete_ativo?: boolean | null
           midia?: string | null
           nome: string
           observacoes?: string | null
           procedimentos?: string | null
           status?: string
           telefone: string
+          tipo_atendimento?: string | null
           updated_at?: string
           user_id: string
           valor?: number
@@ -53,15 +104,82 @@ export type Database = {
           data_contato?: string | null
           horario_agendamento?: string | null
           id?: string
+          lembrete_ativo?: boolean | null
           midia?: string | null
           nome?: string
           observacoes?: string | null
           procedimentos?: string | null
           status?: string
           telefone?: string
+          tipo_atendimento?: string | null
           updated_at?: string
           user_id?: string
           valor?: number
+        }
+        Relationships: []
+      }
+      pagamentos: {
+        Row: {
+          created_at: string
+          data_pagamento: string | null
+          id: string
+          observacoes: string | null
+          paciente_id: string
+          status_pagamento: string
+          updated_at: string
+          user_id: string
+          valor_pago: number
+          valor_total: number
+        }
+        Insert: {
+          created_at?: string
+          data_pagamento?: string | null
+          id?: string
+          observacoes?: string | null
+          paciente_id: string
+          status_pagamento?: string
+          updated_at?: string
+          user_id: string
+          valor_pago?: number
+          valor_total?: number
+        }
+        Update: {
+          created_at?: string
+          data_pagamento?: string | null
+          id?: string
+          observacoes?: string | null
+          paciente_id?: string
+          status_pagamento?: string
+          updated_at?: string
+          user_id?: string
+          valor_pago?: number
+          valor_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_paciente_id_fkey"
+            columns: ["paciente_id"]
+            isOneToOne: false
+            referencedRelation: "pacientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -70,10 +188,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "recepcao"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -200,6 +324,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "recepcao"],
+    },
   },
 } as const
