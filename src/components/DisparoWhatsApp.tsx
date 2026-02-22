@@ -11,8 +11,12 @@ interface DisparoWhatsAppProps {
 const DisparoWhatsApp = ({ pacientes }: DisparoWhatsAppProps) => {
   const [selecionados, setSelecionados] = useState<string[]>([]);
   const [filtroStatus, setFiltroStatus] = useState("");
-  const [mensagemCustom, setMensagemCustom] = useState("");
   const [tipoMensagem, setTipoMensagem] = useState<"lembrete" | "custom">("lembrete");
+
+  const mensagemLembretePadrao = `Olá {nome}!👋\n\nEste é um lembrete de sua consulta marcada:\n\n📅 Data: {data}\n⏰ Horário: {horario}\n🦷 Procedimento: {procedimento}\n📍 Endereço: R. Guilherme Rocha 218, Edifício Jalcy Metrópole, Sala 902\n\nConfirme sua presença! 😊`;
+
+  const [mensagemLembrete, setMensagemLembrete] = useState(mensagemLembretePadrao);
+  const [mensagemCustom, setMensagemCustom] = useState("");
 
   const filtrados = useMemo(() => {
     if (!filtroStatus) return pacientes;
@@ -34,18 +38,15 @@ const DisparoWhatsApp = ({ pacientes }: DisparoWhatsAppProps) => {
   };
 
   const gerarMensagem = (p: any): string => {
-    if (tipoMensagem === "custom") {
-      return mensagemCustom
-        .replace("{nome}", p.nome)
-        .replace("{telefone}", p.telefone)
-        .replace("{data}", p.data_agendamento || "")
-        .replace("{horario}", p.horario_agendamento || "")
-        .replace("{procedimento}", p.procedimentos || "")
-        .replace("{valor}", p.valor ? `R$ ${Number(p.valor).toFixed(2).replace(".", ",")}` : "");
-    }
-
-    const endereco = "R. Guilherme Rocha 218, Edifício Jalcy Metrópole, Sala 902";
-    return `Olá ${p.nome}!👋\n\nEste é um lembrete de sua consulta marcada:\n\n📅 Data: ${p.data_agendamento}\n⏰ Horário: ${p.horario_agendamento}\n🦷 Procedimento: ${p.procedimentos}\n📍 Endereço: ${endereco}\n\n${p.observacoes ? "Observações: " + p.observacoes + "\n\n" : ""}Confirme sua presença! 😊`;
+    const template = tipoMensagem === "custom" ? mensagemCustom : mensagemLembrete;
+    return template
+      .replace(/{nome}/g, p.nome)
+      .replace(/{telefone}/g, p.telefone)
+      .replace(/{data}/g, p.data_agendamento || "")
+      .replace(/{horario}/g, p.horario_agendamento || "")
+      .replace(/{procedimento}/g, p.procedimentos || "")
+      .replace(/{valor}/g, p.valor ? `R$ ${Number(p.valor).toFixed(2).replace(".", ",")}` : "")
+      .replace(/{observacoes}/g, p.observacoes || "");
   };
 
   const enviarDisparo = () => {
@@ -54,8 +55,9 @@ const DisparoWhatsApp = ({ pacientes }: DisparoWhatsAppProps) => {
       return;
     }
 
-    if (tipoMensagem === "custom" && !mensagemCustom.trim()) {
-      toast.error("Digite a mensagem personalizada!");
+    const msgAtual = tipoMensagem === "custom" ? mensagemCustom : mensagemLembrete;
+    if (!msgAtual.trim()) {
+      toast.error("Digite a mensagem!");
       return;
     }
 
@@ -114,21 +116,26 @@ const DisparoWhatsApp = ({ pacientes }: DisparoWhatsAppProps) => {
         </div>
       </div>
 
-      {/* Mensagem personalizada */}
-      {tipoMensagem === "custom" && (
-        <div className="mb-4 rounded-lg border border-primary/20 bg-card p-4">
-          <Label>Mensagem Personalizada</Label>
-          <p className="mb-2 text-xs text-muted-foreground">
-            Use variáveis: {"{nome}"}, {"{telefone}"}, {"{data}"}, {"{horario}"}, {"{procedimento}"}, {"{valor}"}
-          </p>
-          <textarea
-            className={selectClass + " mt-1 min-h-[100px]"}
-            placeholder="Olá {nome}! Sua consulta está marcada para {data} às {horario}..."
-            value={mensagemCustom}
-            onChange={(e) => setMensagemCustom(e.target.value)}
-          />
+      {/* Mensagem editável */}
+      <div className="mb-4 rounded-lg border border-primary/20 bg-card p-4">
+        <div className="flex items-center justify-between mb-2">
+          <Label>{tipoMensagem === "lembrete" ? "Mensagem de Lembrete" : "Mensagem Personalizada"}</Label>
+          {tipoMensagem === "lembrete" && (
+            <Button size="sm" variant="ghost" onClick={() => setMensagemLembrete(mensagemLembretePadrao)} className="text-xs text-muted-foreground">
+              🔄 Restaurar padrão
+            </Button>
+          )}
         </div>
-      )}
+        <p className="mb-2 text-xs text-muted-foreground">
+          Variáveis: {"{nome}"}, {"{telefone}"}, {"{data}"}, {"{horario}"}, {"{procedimento}"}, {"{valor}"}, {"{observacoes}"}
+        </p>
+        <textarea
+          className={selectClass + " mt-1 min-h-[120px]"}
+          placeholder="Olá {nome}! Sua consulta está marcada para {data} às {horario}..."
+          value={tipoMensagem === "lembrete" ? mensagemLembrete : mensagemCustom}
+          onChange={(e) => tipoMensagem === "lembrete" ? setMensagemLembrete(e.target.value) : setMensagemCustom(e.target.value)}
+        />
+      </div>
 
       {/* Lista de pacientes */}
       {filtrados.length === 0 ? (
@@ -187,3 +194,4 @@ const DisparoWhatsApp = ({ pacientes }: DisparoWhatsAppProps) => {
 };
 
 export default DisparoWhatsApp;
+
