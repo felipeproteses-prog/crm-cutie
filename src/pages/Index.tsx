@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,11 @@ const Index = () => {
   const [ano, setAno] = useState(new Date().getFullYear());
   const [filtroNome, setFiltroNome] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("");
+
+  // Search state
+  const [buscaAberta, setBuscaAberta] = useState(false);
+  const [buscaTexto, setBuscaTexto] = useState("");
+  const buscaRef = useRef<HTMLInputElement>(null);
 
   // Dialog states
   const [pagamentoPaciente, setPagamentoPaciente] = useState<any>(null);
@@ -114,6 +120,34 @@ const Index = () => {
       <header className="flex items-center justify-between bg-gradient-to-r from-primary to-primary/80 px-5 py-4">
         <h1 className="font-display text-xl font-bold text-primary-foreground sm:text-2xl">📋 MAGNATA DO CRM</h1>
         <div className="flex items-center gap-3">
+          {buscaAberta ? (
+            <div className="relative flex items-center">
+              <Search className="absolute left-2 h-4 w-4 text-muted-foreground" />
+              <input
+                ref={buscaRef}
+                autoFocus
+                type="text"
+                placeholder="Buscar paciente..."
+                value={buscaTexto}
+                onChange={(e) => setBuscaTexto(e.target.value)}
+                className="h-9 w-48 rounded-md border border-primary-foreground/30 bg-primary-foreground/10 pl-8 pr-8 text-sm text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary-foreground/40 sm:w-64"
+              />
+              <button
+                onClick={() => { setBuscaAberta(false); setBuscaTexto(""); }}
+                className="absolute right-2 text-primary-foreground/70 hover:text-primary-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => { setBuscaAberta(true); setTimeout(() => buscaRef.current?.focus(), 100); }}
+              className="rounded-md p-2 text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground transition-colors"
+              title="Buscar paciente"
+            >
+              <Search className="h-5 w-5" />
+            </button>
+          )}
           <span className="hidden text-sm text-primary-foreground/80 sm:inline">
             {user.user_metadata?.display_name || user.email}
           </span>
@@ -122,6 +156,45 @@ const Index = () => {
           </Button>
         </div>
       </header>
+
+      {/* Search Results Dropdown */}
+      {buscaAberta && buscaTexto.length >= 2 && (() => {
+        const resultados = pacientes.filter((p) =>
+          p.nome.toLowerCase().includes(buscaTexto.toLowerCase()) ||
+          p.telefone.includes(buscaTexto)
+        );
+        return (
+          <div className="absolute right-4 top-16 z-50 w-80 max-h-80 overflow-y-auto rounded-lg border border-border bg-popover shadow-xl sm:w-96">
+            <div className="p-2 text-xs font-semibold text-muted-foreground border-b border-border">
+              {resultados.length} resultado(s)
+            </div>
+            {resultados.length === 0 ? (
+              <p className="p-4 text-center text-sm text-muted-foreground">Nenhum paciente encontrado.</p>
+            ) : (
+              resultados.slice(0, 10).map((p) => (
+                <button
+                  key={p.id}
+                  className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-secondary/80 transition-colors border-b border-border/50 last:border-0"
+                  onClick={() => {
+                    setEditarPaciente(p);
+                    setBuscaAberta(false);
+                    setBuscaTexto("");
+                  }}
+                >
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                    {p.nome.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{p.nome}</p>
+                    <p className="text-xs text-muted-foreground">{p.telefone} · {p.status}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{p.tipo_atendimento || "-"}</span>
+                </button>
+              ))
+            )}
+          </div>
+        );
+      })()}
 
       {/* Navigation */}
       <nav className="flex flex-wrap gap-2 bg-secondary p-3">
