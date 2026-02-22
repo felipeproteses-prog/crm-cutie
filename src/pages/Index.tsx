@@ -425,7 +425,7 @@ const Index = () => {
         paciente={editarPaciente}
         onSaved={fetchPacientes}
       />
-      <FloatingAgendamentos pacientes={pacientes} />
+      <FloatingAgendamentos pacientes={pacientes} onRefresh={fetchPacientes} />
     </div>
   );
 };
