@@ -10,6 +10,7 @@ import PacienteTable from "@/components/PacienteTable";
 import DisparoWhatsApp from "@/components/DisparoWhatsApp";
 import PagamentoDialog from "@/components/PagamentoDialog";
 import ReagendarDialog from "@/components/ReagendarDialog";
+import EditPacienteDialog from "@/components/EditPacienteDialog";
 
 type Secao = "dashboard" | "novo-paciente" | "agendados" | "sem-interesse" | "fechados" | "todos" | "disparo" | "financeiro";
 
@@ -37,6 +38,7 @@ const Index = () => {
   // Dialog states
   const [pagamentoPaciente, setPagamentoPaciente] = useState<any>(null);
   const [reagendarPaciente, setReagendarPaciente] = useState<any>(null);
+  const [editarPaciente, setEditarPaciente] = useState<any>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -163,6 +165,7 @@ const Index = () => {
               ]}
               onDelete={deletePaciente}
               showWhatsApp
+              onEditar={(p) => setEditarPaciente(p)}
               onReagendar={(p) => setReagendarPaciente(p)}
               onDarBaixa={(p) => setPagamentoPaciente(p)}
             />
@@ -181,6 +184,7 @@ const Index = () => {
                 { key: "midia", label: "Mídia" },
               ]}
               onDelete={deletePaciente}
+              onEditar={(p) => setEditarPaciente(p)}
             />
           </div>
         )}
@@ -198,6 +202,7 @@ const Index = () => {
                 { key: "data_agendamento", label: "Data" },
               ]}
               onDelete={deletePaciente}
+              onEditar={(p) => setEditarPaciente(p)}
               onDarBaixa={(p) => setPagamentoPaciente(p)}
             />
           </div>
@@ -216,6 +221,7 @@ const Index = () => {
                 { key: "data_agendamento", label: "Data" },
               ]}
               onDelete={deletePaciente}
+              onEditar={(p) => setEditarPaciente(p)}
               onDarBaixa={(p) => setPagamentoPaciente(p)}
             />
           </div>
@@ -264,6 +270,7 @@ const Index = () => {
                 { key: "valor", label: "Valor", render: (p) => `R$ ${Number(p.valor).toFixed(2).replace(".", ",")}` },
               ]}
               onDelete={deletePaciente}
+              onEditar={(p) => setEditarPaciente(p)}
               onReagendar={(p) => setReagendarPaciente(p)}
               onDarBaixa={(p) => setPagamentoPaciente(p)}
             />
@@ -284,6 +291,12 @@ const Index = () => {
         onClose={() => setReagendarPaciente(null)}
         paciente={reagendarPaciente}
         userId={user.id}
+        onSaved={fetchPacientes}
+      />
+      <EditPacienteDialog
+        open={!!editarPaciente}
+        onClose={() => setEditarPaciente(null)}
+        paciente={editarPaciente}
         onSaved={fetchPacientes}
       />
     </div>

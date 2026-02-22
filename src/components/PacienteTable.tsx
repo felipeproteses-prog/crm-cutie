@@ -7,6 +7,7 @@ interface PacienteTableProps {
   showWhatsApp?: boolean;
   onReagendar?: (p: any) => void;
   onDarBaixa?: (p: any) => void;
+  onEditar?: (p: any) => void;
 }
 
 const sendWhatsApp = (p: any) => {
@@ -16,7 +17,7 @@ const sendWhatsApp = (p: any) => {
   window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, "_blank");
 };
 
-const PacienteTable = ({ pacientes, columns, onDelete, showWhatsApp, onReagendar, onDarBaixa }: PacienteTableProps) => {
+const PacienteTable = ({ pacientes, columns, onDelete, showWhatsApp, onReagendar, onDarBaixa, onEditar }: PacienteTableProps) => {
   if (pacientes.length === 0) {
     return <p className="mt-4 text-center text-muted-foreground">Nenhum paciente encontrado.</p>;
   }
@@ -43,6 +44,11 @@ const PacienteTable = ({ pacientes, columns, onDelete, showWhatsApp, onReagendar
                 </td>
               ))}
               <td className="flex flex-wrap gap-1.5 p-3">
+                {onEditar && (
+                  <Button size="sm" variant="outline" onClick={() => onEditar(p)} className="text-xs font-bold border-accent text-accent">
+                    ✏️ Editar
+                  </Button>
+                )}
                 {showWhatsApp && (
                   <Button size="sm" onClick={() => sendWhatsApp(p)} className="bg-[hsl(142,70%,49%)] text-[hsl(0,0%,100%)] hover:bg-[hsl(142,70%,40%)] text-xs font-bold">
                     WhatsApp
