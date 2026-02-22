@@ -34,10 +34,11 @@ const Dashboard = ({ pacientes, mes, ano, onMesChange, onAnoChange }: DashboardP
     const agendados = filtrados.filter((p) => p.status === "Agendado").length;
     const semInteresse = filtrados.filter((p) => p.status === "Sem Interesse").length;
     const fechados = filtrados.filter((p) => p.status === "Fechado").length;
+    const compareceu = filtrados.filter((p) => p.status === "Compareceu").length;
     const faturamento = filtrados
       .filter((p) => p.status === "Fechado")
       .reduce((s, p) => s + (Number(p.valor) || 0), 0);
-    return { total: filtrados.length, agendados, semInteresse, fechados, faturamento };
+    return { total: filtrados.length, agendados, semInteresse, fechados, compareceu, faturamento };
   }, [pacientes, mes, ano]);
 
   const currentYear = new Date().getFullYear();
@@ -72,9 +73,10 @@ const Dashboard = ({ pacientes, mes, ano, onMesChange, onAnoChange }: DashboardP
           </select>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         <StatCard title="Total de Leads" value={stats.total} icon="📊" />
         <StatCard title="Agendados" value={stats.agendados} icon="📅" />
+        <StatCard title="Compareceu" value={stats.compareceu} icon="🏥" />
         <StatCard title="Sem Interesse" value={stats.semInteresse} icon="❌" />
         <StatCard title="Fechados" value={stats.fechados} icon="✅" />
         <StatCard title="Faturamento" value={`R$ ${stats.faturamento.toFixed(2).replace(".", ",")}`} icon="💰" />
