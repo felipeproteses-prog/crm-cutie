@@ -18,23 +18,16 @@ const FloatingAgendamentos = ({ pacientes }: FloatingAgendamentosProps) => {
 
   const hoje = useMemo(() => new Date().toISOString().split("T")[0], []);
 
+  const isRelevant = (p: any) =>
+    ["Agendado", "Remarcado"].includes(p.status);
+
   const agendamentosAmanha = useMemo(
-    () =>
-      pacientes.filter(
-        (p) =>
-          p.data_agendamento === amanha &&
-          ["Agendado", "Remarcado"].includes(p.status)
-      ),
+    () => pacientes.filter((p) => p.data_agendamento === amanha && isRelevant(p)),
     [pacientes, amanha]
   );
 
   const agendamentosHoje = useMemo(
-    () =>
-      pacientes.filter(
-        (p) =>
-          p.data_agendamento === hoje &&
-          ["Agendado", "Remarcado"].includes(p.status)
-      ),
+    () => pacientes.filter((p) => p.data_agendamento === hoje && isRelevant(p)),
     [pacientes, hoje]
   );
 
@@ -103,17 +96,33 @@ const FloatingAgendamentos = ({ pacientes }: FloatingAgendamentosProps) => {
   );
 };
 
+const tipoIcon = (tipo: string) => {
+  switch (tipo) {
+    case "Prova da prótese": return "🔍";
+    case "Entrega da prótese": return "📦";
+    case "Ajuste pós-entrega": return "🔧";
+    case "Avaliação": return "📋";
+    case "Retorno comum": return "🔄";
+    default: return "🏥";
+  }
+};
+
 const CardPaciente = ({ p, formatDate, onWhatsApp }: { p: any; formatDate: (d: string) => string; onWhatsApp: (p: any) => void }) => (
   <div className="rounded-lg border border-border bg-secondary/50 p-4 space-y-2">
     <div className="flex items-center justify-between">
       <h4 className="font-bold text-foreground text-base">{p.nome}</h4>
       <Badge variant="outline" className="border-accent text-accent text-xs">{p.status}</Badge>
     </div>
+    {p.tipo_atendimento && (
+      <div className="rounded-md bg-primary/10 px-3 py-1.5 text-sm font-semibold text-primary">
+        {tipoIcon(p.tipo_atendimento)} {p.tipo_atendimento}
+      </div>
+    )}
     <div className="space-y-1 text-sm text-muted-foreground">
       <p>📞 <span className="text-foreground font-medium">{p.telefone}</span></p>
+      <p>📅 Data: <span className="text-foreground font-medium">{p.data_agendamento ? formatDate(p.data_agendamento) : "Não definida"}</span></p>
       <p>⏰ Horário: <span className="text-foreground font-medium">{p.horario_agendamento || "Não definido"}</span></p>
       <p>🦷 Procedimento: <span className="text-foreground font-medium">{p.procedimentos || "Não informado"}</span></p>
-      <p>🏥 Tipo: <span className="text-foreground font-medium">{p.tipo_atendimento || "Não informado"}</span></p>
       {p.midia && <p>📱 Mídia: <span className="text-foreground font-medium">{p.midia}</span></p>}
       {p.valor > 0 && <p>💰 Valor: <span className="text-foreground font-medium">R$ {Number(p.valor).toFixed(2).replace(".", ",")}</span></p>}
       {p.observacoes && <p>📝 Obs: <span className="text-foreground font-medium">{p.observacoes}</span></p>}
