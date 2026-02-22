@@ -4,15 +4,20 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from "@/components/ui/alert-dialog";
 
 interface FloatingAgendamentosProps {
   pacientes: any[];
+  onRefresh?: () => void;
 }
 
-const FloatingAgendamentos = ({ pacientes }: FloatingAgendamentosProps) => {
+const FloatingAgendamentos = ({ pacientes, onRefresh }: FloatingAgendamentosProps) => {
   const [open, setOpen] = useState(false);
   const [indice, setIndice] = useState(0);
   const [pagamentos, setPagamentos] = useState<Record<string, any>>({});
+  const [showCompareceuDialog, setShowCompareceuDialog] = useState(false);
+  const [compareceuPaciente, setCompareceuPaciente] = useState<any>(null);
 
   useEffect(() => {
     const fetchPagamentos = async () => {
@@ -75,6 +80,29 @@ const FloatingAgendamentos = ({ pacientes }: FloatingAgendamentosProps) => {
     window.open(`https://wa.me/55${phone}`, "_blank");
   };
 
+
+  const handleCompareceu = (p: any) => {
+    setCompareceuPaciente(p);
+    setShowCompareceuDialog(true);
+  };
+
+  const handleCompareceuChoice = async (fechou: boolean) => {
+    if (!compareceuPaciente) return;
+    const novoStatus = fechou ? "Fechado" : "Sem Interesse";
+    const { error } = await supabase
+      .from("pacientes")
+      .update({ status: novoStatus })
+      .eq("id", compareceuPaciente.id);
+    setShowCompareceuDialog(false);
+    setCompareceuPaciente(null);
+    if (error) {
+      toast.error("Erro ao atualizar status.");
+    } else {
+      toast.success(fechou ? "Marcado como Fechado ✅" : "Marcado como Sem Interesse ❌");
+      onRefresh?.();
+    }
+  };
+
   return (
     <>
       <Sheet open={open} onOpenChange={setOpen}>
@@ -134,11 +162,38 @@ const FloatingAgendamentos = ({ pacientes }: FloatingAgendamentosProps) => {
                 pagamento={pagamentos[atual.id]}
                 formatDate={formatDate}
                 onWhatsApp={sendWhatsApp}
+                onCompareceu={handleCompareceu}
               />
             </div>
           )}
         </SheetContent>
       </Sheet>
+
+      <AlertDialog open={showCompareceuDialog} onOpenChange={setShowCompareceuDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>🏥 Paciente compareceu!</AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              O paciente <span className="font-bold">{compareceuPaciente?.nome}</span> compareceu. Ele fechou o procedimento?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2 sm:justify-center">
+            <Button
+              className="bg-[hsl(142,70%,40%)] hover:bg-[hsl(142,70%,35%)] text-[hsl(0,0%,100%)] font-bold text-base px-6"
+              onClick={() => handleCompareceuChoice(true)}
+            >
+              ✅ Sim, Fechou!
+            </Button>
+            <Button
+              variant="destructive"
+              className="font-bold text-base px-6"
+              onClick={() => handleCompareceuChoice(false)}
+            >
+              ❌ Não Fechou
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
@@ -154,7 +209,7 @@ const tipoIcon = (tipo: string) => {
   }
 };
 
-const CardPaciente = ({ p, pagamento, formatDate, onWhatsApp }: { p: any; pagamento?: any; formatDate: (d: string) => string; onWhatsApp: (p: any) => void }) => {
+const CardPaciente = ({ p, pagamento, formatDate, onWhatsApp, onCompareceu }: { p: any; pagamento?: any; formatDate: (d: string) => string; onWhatsApp: (p: any) => void; onCompareceu?: (p: any) => void }) => {
   const valorTotal = Number(p.valor) || 0;
   const valorPago = pagamento ? Number(pagamento.valor_pago) || 0 : 0;
   const valorRestante = valorTotal - valorPago;
@@ -202,9 +257,16 @@ const CardPaciente = ({ p, pagamento, formatDate, onWhatsApp }: { p: any; pagame
         </div>
       )}
 
-      <Button size="sm" onClick={() => onWhatsApp(p)} className="mt-2 w-full bg-[hsl(142,70%,49%)] text-[hsl(0,0%,100%)] hover:bg-[hsl(142,70%,40%)] text-xs font-bold">
-        📲 Abrir WhatsApp
-      </Button>
+      <div className="flex gap-2 mt-2">
+        <Button size="sm" onClick={() => onWhatsApp(p)} className="flex-1 bg-[hsl(142,70%,49%)] text-[hsl(0,0%,100%)] hover:bg-[hsl(142,70%,40%)] text-xs font-bold">
+          📲 WhatsApp
+        </Button>
+        {onCompareceu && (
+          <Button size="sm" onClick={() => onCompareceu(p)} className="flex-1 bg-accent text-accent-foreground hover:bg-accent/80 text-xs font-bold">
+            🏥 Compareceu
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
