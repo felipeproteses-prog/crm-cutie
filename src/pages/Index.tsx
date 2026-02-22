@@ -14,12 +14,13 @@ import ReagendarDialog from "@/components/ReagendarDialog";
 import EditPacienteDialog from "@/components/EditPacienteDialog";
 import FloatingAgendamentos from "@/components/FloatingAgendamentos";
 
-type Secao = "dashboard" | "novo-paciente" | "agendados" | "sem-interesse" | "fechados" | "todos" | "disparo" | "financeiro";
+type Secao = "dashboard" | "novo-paciente" | "agendados" | "compareceu" | "sem-interesse" | "fechados" | "todos" | "disparo" | "financeiro";
 
 const NAV_ITEMS: { id: Secao; label: string; icon: string }[] = [
   { id: "dashboard", label: "Painel", icon: "📊" },
   { id: "novo-paciente", label: "Novo Paciente", icon: "➕" },
   { id: "agendados", label: "Agendados", icon: "📅" },
+  { id: "compareceu", label: "Compareceu", icon: "🏥" },
   { id: "sem-interesse", label: "Sem Interesse", icon: "❌" },
   { id: "fechados", label: "Fechados", icon: "✅" },
   { id: "financeiro", label: "Financeiro", icon: "💰" },
@@ -91,6 +92,12 @@ const Index = () => {
     link.click();
   };
 
+  const atualizarStatus = async (id: string, novoStatus: string) => {
+    const { error } = await supabase.from("pacientes").update({ status: novoStatus }).eq("id", id);
+    if (error) toast.error("Erro ao atualizar status.");
+    else { toast.success(`Status alterado para ${novoStatus}!`); fetchPacientes(); }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -107,6 +114,7 @@ const Index = () => {
   if (!user) return <LoginScreen onLogin={fetchPacientes} />;
 
   const agendados = pacientes.filter((p) => ["Agendado", "Remarcado"].includes(p.status));
+  const compareceram = pacientes.filter((p) => p.status === "Compareceu");
   const semInteresse = pacientes.filter((p) => p.status === "Sem Interesse");
   const fechados = pacientes.filter((p) => p.status === "Fechado");
 
@@ -245,6 +253,50 @@ const Index = () => {
             />
           </div>
         )}
+
+        {secao === "compareceu" && (
+          <div className="animate-fade-in">
+            <h2 className="mb-2 font-display text-2xl font-bold">🏥 Pacientes que Compareceram</h2>
+            {compareceram.length === 0 ? (
+              <p className="text-muted-foreground">Nenhum paciente com status "Compareceu".</p>
+            ) : (
+              <div className="space-y-3">
+                {compareceram.map((p) => (
+                  <div key={p.id} className="flex flex-col gap-3 rounded-xl border-2 border-primary/20 bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex-1">
+                      <p className="text-lg font-bold">{p.nome}</p>
+                      <p className="text-sm text-muted-foreground">{p.telefone} · {p.tipo_atendimento || "-"} · {p.procedimentos || "-"}</p>
+                      <p className="text-sm text-muted-foreground">Valor: <span className="font-semibold text-foreground">R$ {Number(p.valor).toFixed(2).replace(".", ",")}</span></p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        className="bg-green-600 hover:bg-green-700 text-white font-bold"
+                        onClick={() => atualizarStatus(p.id, "Fechado")}
+                      >
+                        ✅ Fechou
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        className="font-bold"
+                        onClick={() => atualizarStatus(p.id, "Sem Interesse")}
+                      >
+                        ❌ Não Fechou
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditarPaciente(p)}
+                      >
+                        ✏️ Editar
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
 
         {secao === "sem-interesse" && (
           <div className="animate-fade-in">
