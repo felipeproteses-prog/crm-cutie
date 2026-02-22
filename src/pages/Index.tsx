@@ -271,10 +271,7 @@ const Index = () => {
                     <div className="flex gap-2">
                       <Button
                         className="bg-green-600 hover:bg-green-700 text-white font-bold"
-                        onClick={async () => {
-                          await atualizarStatus(p.id, "Fechado");
-                          setPagamentoPaciente(p);
-                        }}
+                        onClick={() => atualizarStatus(p.id, "Fechado")}
                       >
                         ✅ Fechou
                       </Button>
@@ -427,9 +424,8 @@ const Index = () => {
         onClose={() => setEditarPaciente(null)}
         paciente={editarPaciente}
         onSaved={fetchPacientes}
-        onOpenPagamento={(p) => setPagamentoPaciente(p)}
       />
-      <FloatingAgendamentos pacientes={pacientes} onRefresh={fetchPacientes} onOpenPagamento={(p) => setPagamentoPaciente(p)} />
+      <FloatingAgendamentos pacientes={pacientes} onRefresh={fetchPacientes} />
     </div>
   );
 };

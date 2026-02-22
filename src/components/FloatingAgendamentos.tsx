@@ -10,10 +10,9 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 interface FloatingAgendamentosProps {
   pacientes: any[];
   onRefresh?: () => void;
-  onOpenPagamento?: (paciente: any) => void;
 }
 
-const FloatingAgendamentos = ({ pacientes, onRefresh, onOpenPagamento }: FloatingAgendamentosProps) => {
+const FloatingAgendamentos = ({ pacientes, onRefresh }: FloatingAgendamentosProps) => {
   const [open, setOpen] = useState(false);
   const [indice, setIndice] = useState(0);
   const [pagamentos, setPagamentos] = useState<Record<string, any>>({});
@@ -94,7 +93,6 @@ const FloatingAgendamentos = ({ pacientes, onRefresh, onOpenPagamento }: Floatin
       .from("pacientes")
       .update({ status: novoStatus })
       .eq("id", compareceuPaciente.id);
-    const pacienteRef = compareceuPaciente;
     setShowCompareceuDialog(false);
     setCompareceuPaciente(null);
     if (error) {
@@ -102,9 +100,6 @@ const FloatingAgendamentos = ({ pacientes, onRefresh, onOpenPagamento }: Floatin
     } else {
       toast.success(fechou ? "Marcado como Fechado ✅" : "Marcado como Sem Interesse ❌");
       onRefresh?.();
-      if (fechou && onOpenPagamento) {
-        onOpenPagamento(pacienteRef);
-      }
     }
   };
 

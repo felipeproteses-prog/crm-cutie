@@ -12,10 +12,9 @@ interface EditPacienteDialogProps {
   onClose: () => void;
   paciente: any;
   onSaved: () => void;
-  onOpenPagamento?: (paciente: any) => void;
 }
 
-const EditPacienteDialog = ({ open, onClose, paciente, onSaved, onOpenPagamento }: EditPacienteDialogProps) => {
+const EditPacienteDialog = ({ open, onClose, paciente, onSaved }: EditPacienteDialogProps) => {
   const [form, setForm] = useState({
     nome: "", telefone: "", data_contato: "", data_agendamento: "",
     horario_agendamento: "", status: "Agendado", valor: "0",
@@ -52,23 +51,10 @@ const EditPacienteDialog = ({ open, onClose, paciente, onSaved, onOpenPagamento 
     setForm((f) => ({ ...f, [k]: v }));
   };
 
-  const handleCompareceuChoice = async (fechou: boolean) => {
-    const novoStatus = fechou ? "Fechado" : "Sem Interesse";
-    setForm((f) => ({ ...f, status: novoStatus }));
+  const handleCompareceuChoice = (fechou: boolean) => {
+    setForm((f) => ({ ...f, status: fechou ? "Fechado" : "Sem Interesse" }));
     setShowCompareceuDialog(false);
     toast.info(fechou ? "Marcado como Fechado ✅" : "Marcado como Sem Interesse ❌");
-    if (fechou && onOpenPagamento && paciente) {
-      // Auto-save and open payment
-      const { error } = await supabase
-        .from("pacientes")
-        .update({ status: "Fechado" })
-        .eq("id", paciente.id);
-      if (!error) {
-        onSaved();
-        onClose();
-        onOpenPagamento(paciente);
-      }
-    }
   };
 
   const handleSubmit = async () => {
