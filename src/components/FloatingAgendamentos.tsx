@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +11,7 @@ interface FloatingAgendamentosProps {
 
 const FloatingAgendamentos = ({ pacientes }: FloatingAgendamentosProps) => {
   const [open, setOpen] = useState(false);
+  const [indice, setIndice] = useState(0);
   const [pagamentos, setPagamentos] = useState<Record<string, any>>({});
 
   useEffect(() => {
@@ -53,7 +55,15 @@ const FloatingAgendamentos = ({ pacientes }: FloatingAgendamentosProps) => {
   const todos = [...agendamentosHoje, ...agendamentosAmanha];
   const total = todos.length;
 
+  // Reset index when list changes
+  useEffect(() => {
+    if (indice >= total) setIndice(Math.max(0, total - 1));
+  }, [total, indice]);
+
   if (total === 0) return null;
+
+  const atual = todos[indice];
+  const isHoje = atual?.data_agendamento === hoje;
 
   const formatDate = (d: string) => {
     const [y, m, day] = d.split("-");
@@ -86,29 +96,47 @@ const FloatingAgendamentos = ({ pacientes }: FloatingAgendamentosProps) => {
             <SheetTitle className="text-xl">🔔 Próximos Agendamentos</SheetTitle>
           </SheetHeader>
 
-          <div className="mt-4 space-y-6">
-            {agendamentosHoje.length > 0 && (
-              <div>
-                <h3 className="mb-3 text-lg font-bold text-primary">📅 Hoje — {formatDate(hoje)}</h3>
-                <div className="space-y-3">
-                  {agendamentosHoje.map((p) => (
-                    <CardPaciente key={p.id} p={p} pagamento={pagamentos[p.id]} formatDate={formatDate} onWhatsApp={sendWhatsApp} />
-                  ))}
-                </div>
+          {atual && (
+            <div className="mt-4 space-y-4">
+              {/* Navigation */}
+              <div className="flex items-center justify-between">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={indice === 0}
+                  onClick={() => setIndice((i) => i - 1)}
+                  className="gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" /> Anterior
+                </Button>
+                <span className="text-sm font-bold text-muted-foreground">
+                  {indice + 1} / {total}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={indice === total - 1}
+                  onClick={() => setIndice((i) => i + 1)}
+                  className="gap-1"
+                >
+                  Próximo <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
-            )}
 
-            {agendamentosAmanha.length > 0 && (
-              <div>
-                <h3 className="mb-3 text-lg font-bold text-primary">📅 Amanhã — {formatDate(amanha)}</h3>
-                <div className="space-y-3">
-                  {agendamentosAmanha.map((p) => (
-                    <CardPaciente key={p.id} p={p} pagamento={pagamentos[p.id]} formatDate={formatDate} onWhatsApp={sendWhatsApp} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+              {/* Day label */}
+              <h3 className="text-lg font-bold text-primary">
+                📅 {isHoje ? "Hoje" : "Amanhã"} — {formatDate(atual.data_agendamento)}
+              </h3>
+
+              {/* Patient card */}
+              <CardPaciente
+                p={atual}
+                pagamento={pagamentos[atual.id]}
+                formatDate={formatDate}
+                onWhatsApp={sendWhatsApp}
+              />
+            </div>
+          )}
         </SheetContent>
       </Sheet>
     </>
