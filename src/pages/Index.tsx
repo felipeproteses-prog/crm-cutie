@@ -11,6 +11,7 @@ import DisparoWhatsApp from "@/components/DisparoWhatsApp";
 import PagamentoDialog from "@/components/PagamentoDialog";
 import ReagendarDialog from "@/components/ReagendarDialog";
 import EditPacienteDialog from "@/components/EditPacienteDialog";
+import FloatingAgendamentos from "@/components/FloatingAgendamentos";
 
 type Secao = "dashboard" | "novo-paciente" | "agendados" | "sem-interesse" | "fechados" | "todos" | "disparo" | "financeiro";
 
@@ -299,6 +300,7 @@ const Index = () => {
         paciente={editarPaciente}
         onSaved={fetchPacientes}
       />
+      <FloatingAgendamentos pacientes={pacientes} />
     </div>
   );
 };
