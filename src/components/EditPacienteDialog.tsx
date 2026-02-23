@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
 interface EditPacienteDialogProps {
@@ -22,7 +21,6 @@ const EditPacienteDialog = ({ open, onClose, paciente, onSaved }: EditPacienteDi
     tipo_atendimento: "Avaliação", lembrete_ativo: false,
   });
   const [loading, setLoading] = useState(false);
-  const [showCompareceuDialog, setShowCompareceuDialog] = useState(false);
 
   useEffect(() => {
     if (open && paciente) {
@@ -43,19 +41,7 @@ const EditPacienteDialog = ({ open, onClose, paciente, onSaved }: EditPacienteDi
     }
   }, [open, paciente]);
 
-  const set = (k: string, v: string) => {
-    if (k === "status" && v === "Compareceu") {
-      setShowCompareceuDialog(true);
-      return;
-    }
-    setForm((f) => ({ ...f, [k]: v }));
-  };
-
-  const handleCompareceuChoice = (fechou: boolean) => {
-    setForm((f) => ({ ...f, status: fechou ? "Fechado" : "Sem Interesse" }));
-    setShowCompareceuDialog(false);
-    toast.info(fechou ? "Marcado como Fechado ✅" : "Marcado como Sem Interesse ❌");
-  };
+  const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const handleSubmit = async () => {
     if (!form.nome.trim() || !form.telefone.trim()) {
@@ -95,7 +81,6 @@ const EditPacienteDialog = ({ open, onClose, paciente, onSaved }: EditPacienteDi
   const selectClass = "w-full rounded-lg border border-primary/30 bg-secondary p-2.5 text-foreground";
 
   return (
-    <>
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -176,33 +161,6 @@ const EditPacienteDialog = ({ open, onClose, paciente, onSaved }: EditPacienteDi
         </Button>
       </DialogContent>
     </Dialog>
-
-    <AlertDialog open={showCompareceuDialog} onOpenChange={setShowCompareceuDialog}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>🏥 Paciente compareceu!</AlertDialogTitle>
-          <AlertDialogDescription className="text-base">
-            O paciente <span className="font-bold">{form.nome}</span> compareceu. Ele fechou o procedimento?
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter className="flex gap-2 sm:justify-center">
-          <Button
-            className="bg-green-600 hover:bg-green-700 text-white font-bold text-base px-6"
-            onClick={() => handleCompareceuChoice(true)}
-          >
-            ✅ Sim, Fechou!
-          </Button>
-          <Button
-            variant="destructive"
-            className="font-bold text-base px-6"
-            onClick={() => handleCompareceuChoice(false)}
-          >
-            ❌ Não Fechou
-          </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-    </>
   );
 };
 
